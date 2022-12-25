@@ -14,12 +14,9 @@
 
 
   <style>
-
     h1 {
       color: rgb(13, 255, 0);
     }
-
-   
   </style>
 </head>
 
@@ -40,9 +37,13 @@
     </div>
   </nav>
   <br>
-<h1>-didn't make a return date and a late loans, sorry :(<br>
-  -will be updated in the future
-</h1>
+  <h1>-didn't make a return date and a late loans, sorry :(<br>
+    -will be updated in the future
+  </h1>
+  <script>
+    const MY_SERVER = "https://gil-library-backend.onrender.com"
+    axios(MY_SERVER)
+      .then((res) => res.json()).then((json) => console.log(json))
   </script>
 </body>
 
