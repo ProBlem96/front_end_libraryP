@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/library.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+
+<body>
+    <!-- navbar -->
+    <nav class="navbar bg-light">
+        <div class="container-fluid">
+
+            <a class="navbar-brand" href="index.html">
+                <img src="/images/favicon.png" alt="Logo" width="70" height="70" class="d-inline-block align-text-top">
+
+            </a>
+            <a href="books.html">books</a>
+            <a href="costumers.html">customers</a>
+            <a href="loans.html">loans</a>
+            <a href="nolateloans.html">:(</a>
+        </div>
+    </nav>
+    <h1><span class="smallerFont">Gil's Library, a special one </span></h1>
+    <!-- Button trigger modal -->
+    <button type="button" class="button" data-toggle="modal" data-target="#exampleModalCenter">
+        new loan
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="exampleModalLongTitle">keep reading,new loan arrived!</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        customer name: <input id="customer_name"><br>
+                        book name:<input id="book_name"><br>
+
+                    </div><br>
+                    <div class="modal-footer"></div>
+                    <button onclick="loan_addData()" type="button" class="btn btn-primary">Add new loan</button>
+
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <br>
+            <div>
+                <input id="all_loans" onkeyup="displayAllLoans()" type="text" class="form-control" aria-label="Default"
+                    placeholder="Search loan by name" aria-describedby="inputGroup-sizing-default">
+            </div>
+            <br>
+
+            <div id="display_loans"></div>
+
+
+            <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+            <script>
+                let today = new Date();
+                let dd = String(today.getDate()).padStart(2, '0');
+                let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+                let yyyy = today.getFullYear();
+
+                today = mm + '/' + dd + '/' + yyyy;
+                
+
+                let loans = []
+
+                const MY_SERVER = "https://gil-library-backend.onrender.com" //flask
+
+
+
+
+
+                const displayAllLoans = () => {
+                    console.log("first")
+                    display_loans.innerHTML =
+                        loans.data.filter(x => x.customer_name.includes(all_loans.value)).map(loan =>
+                            `<div> <button onclick='upd_return(${loan.id})'>book return</button> 
+                                loaner name: ${loan.customer_name},book loaned: ${loan.book_name},returndate:${loan.returndate}</div>`).join("")
+                }
+
+                // display.innerHTML = res.data.map(cust => `
+                //     <div><h3>
+                //     <button onclick='upd_return(${loan.id})'>book return</button>
+                //     <button onclick='delCustomer(${cust.id})'>delete customer - ${cust.id}</button>
+                //     customer name: ${cust.customer_name} ,city: ${cust.city} ,age:${cust.age}</h3></div><hr>`).join("")
+
+                const build_display = () => {
+                    console.log("22222first")
+                    display_loans.innerHTML = loans.data.map(c =>
+                        `<div>
+            costumer who loaned:${c.customer_name},book name: ${c.book_name}</div>`).join("")
+                }
+
+
+
+
+
+
+
+                /////////////////////loans////////////////////////
+
+                const loan_loadData = async () => {
+                    // get (READ)
+                    loans = await axios.get(MY_SERVER + "/loans/") //get data from server
+                    //build display
+                    console.log(loans.data) //display data  in console
+                    build_display()
+                }
+                loan_loadData()
+
+                // post (Create)
+                const loan_addData = async () => {
+                //     await axios.post(MY_SERVER + "/loans/", { customer_name: customer_name.value, book_name: book_name.value }).then((res) => console.log(res.data))
+                //     loan_loadData()
+                // }
+                customers = await axios.get(MY_SERVER+ "/cust/")
+            books = await axios.get(MY_SERVER+ "/books/")
+            // Checks if both customer name and book name exist - if they exist, add them. if not, display message.
+            if (customers.data.some(customer => customer.customer_name === customer_name.value) && books.data.some(book => book.book_name === book_name.value)) {
+                axios.post(MY_SERVER + "/loans/", { customer_name: customer_name.value, book_name: book_name.value })
+                loan_updated()
+            }
+            else {
+                if (!customers.data.some(customer => customer.name === customer_name.value)) {
+                    customer_name_error()
+                    console.log("The customer's name isn't found")
+                }
+                if (!books.data.some(book => book.name === book_name.value)) {
+                    book_name_error()
+                    console.log("The book's name isn't found")
+                }
+            }}
+            loan_loadData()
+        
+
+                //delete (delete)
+                const del_loan = async (id) => {
+                    console.log(id)
+                    await axios.delete(MY_SERVER + "/loans/" + id).then((loans) => console.log(loans.data))
+                    loan_loadData()
+                }
+
+                const upd_return = async (id) => {
+                    // put (update)
+                    console.log(today)
+                    const res = await axios.put(MY_SERVER + "/loans/" + id, { customer_name: customer_name.value, book_name: book_name.value, returndate: today})
+                    console.log(res)
+                    loan_loadData()
+                }
+                const customer_name_error = () => {
+                    Toastify({
+                text: "Please enter a valid customer name",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", 
+                position: "left", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // 
+            }).showToast();
+        }
+        const book_name_error = () => {
+            Toastify({
+                text: "Please enter a valid book name",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", 
+                position: "left", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // 
+            }).showToast();
+        }
+        const loan_updated = () => {
+            Toastify({
+                text: "Book loaned",
+                duration: 8000,
+                destination: "https://github.com/apvarun/toastify-js",
+                newWindow: true,
+                close: true,
+                gravity: "buttom", // `top` or `bottom`
+                position: "center", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #00b09b, #96c93d)",
+                },
+                onClick: function () { } // Callback after click
+            }).showToast();
+            loadData() 
+        }
+
+
+
+
+
+            </script>
+
+</body>
+
+</html>

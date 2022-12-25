@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.png">
+  <link rel="stylesheet" href="/css/library.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+
+</head>
+
+<body>
+  <!-- navbar -->
+  <nav class="navbar bg-light">
+    <div class="container-fluid">
+
+      <a class="navbar-brand" href="index.html">
+        <img src="/images/favicon.png" alt="Logo" width="70" height="70" class="d-inline-block align-text-top">
+
+      </a>
+      <a href="books.html">books</a>
+      <a href="costumers.html">customers</a>
+      <a href="loans.html">loans</a>
+      <a href="nolateloans.html">:(</a>
+    </div>
+  </nav>
+  <h1><span class="smallerFont">Gil's Library, a special one </span></h1>
+  <!-- Button trigger modal -->
+  <button type="button" class="button" data-toggle="modal" data-target="#exampleModalCenter">
+    add book
+  </button>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="exampleModalLongTitle">Great, a new book!!</h3>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div></div id="book_add_div">
+          please insert your book information<br>
+          book name:<input id="book_name"><br>
+          author:<input id="author"><br>
+          year published:<input id="year_published"><br>
+          type: <select style='border-radius: 5px;' name="type" id="b_type">
+            <option disabled selected value>Book Type</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select><br>
+          <div class="modal-footer"></div>
+          <button onclick="book_addData()" type="button" class="btn btn-primary">Add new book</button>
+
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="input-group mb-3">
+    <div class="input-group-prepend">
+      <br>
+      <div>
+        <input id="all_books" onkeyup="displayAllBooks()" type="text" class="form-control" aria-label="Default"
+          placeholder="Search book by name" aria-describedby="inputGroup-sizing-default">
+      </div>
+      <br>
+      <div id="display_books"></div>
+
+
+
+      <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+      <script>
+
+
+        const MY_SERVER = "https://gil-library-backend.onrender.com"
+
+
+        let array_books = []
+
+
+        const displayAllBooks = () => {
+          console.log("${book.book_id}")
+          display_books.innerHTML =
+            array_books.data.filter(x => x.book_name.includes(all_books.value)).map(book => `<div>
+        <button onClick="del_book(${book.id})">remove book - </button>
+          book name: ${book.book_name},author: ${book.author},
+          year published: ${book.year_published},type: ${book.b_type}</div>`).join("")
+
+        }
+
+
+        const build_display = () => {
+          console.log("22222first")
+          display_books.innerHTML = array_books.data.map(c =>
+            `<div>
+             book:${c.book_name},author: ${c.author},year published:${c.year_published} </div>`).join("")
+        }
+
+
+
+        ///////////////////books///////////////////////
+        const book_loadData = async () => {
+          // get (READ)
+          array_books = await axios.get(MY_SERVER + "/books/") //get data from server
+          console.table("array_books: ", array_books)
+          displayAllBooks()
+          build_display()
+        }
+        book_loadData()
+
+        // post (Create)
+        const book_addData = async () => {
+          console.log("first")
+          if ((book_name.value.length > 1 && parseInt(book_name.value) != book_name.value) &&
+            (author.value.length > 1 && parseInt(author.value) != author.value) &&
+            (year_published.value.length >= 2 && parseInt(year_published.value) == year_published.value) &&
+            (b_type.value.length == 1 && ((b_type.value == 1) || (b_type.value == 2) || (b_type.value == 3)))) {
+            await axios.post(MY_SERVER + "/books/", {
+              book_name: book_name.value
+              , author: author.value,
+              year_published: year_published.value, b_type: b_type.value
+            })
+              .then((res) => console.log(res.data))
+            book_loadData()
+          }
+          else {
+            
+            if (book_name.value.length < 1 || parseInt(book_name.value) == book_name.value) {
+              book_error()
+            }
+            
+            if (author.value.length < 1 || parseInt(author.value) == author.value) {
+              author_name_error()
+            }
+            
+            if (year_published.value.length < 2 || parseInt(year_published.value) != year_published.value) {
+              year_published_error()
+            }
+          }
+        }
+
+        const book_error = () => {
+            Toastify({
+                text: "Please enter a valid book name",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", 
+                position: "left", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right, #990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // 
+            }).showToast();
+        }
+
+        const author_name_error = () => {
+            Toastify({
+                text: "Please enter a valid author name",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", 
+                position: "left", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right, #990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // 
+            }).showToast();
+        }
+
+        const year_published_error = () => {
+            Toastify({
+                text: "Please enter a valid year",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", 
+                position: "left", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // 
+            }).showToast();
+        }
+
+          // //delete (delete)
+          const del_book = async (id) => {
+            console.log(id)
+            // res = []
+            await axios.delete(MY_SERVER + "/books/" + id)
+              .then((array_books) => console.log(array_books.data))
+            book_loadData()
+          }
+
+
+
+
+
+
+
+          
+    // const updbook = async (id) => {
+    //   // put (update)
+    //   const res = await axios.put(MY_SERVER + "/books/" + id,
+    //     {
+    //       book_name: book_name.value, author: author.value,
+    //       year_published: year_pub.value, b_type: b_type.value
+    //     })
+    //   console.log(res)
+    //   book_loadData()
+    //  }
+
+
+
+
+
+      </script>
+
+</body>
+
+</html>

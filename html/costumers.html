@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.png">
+    <link rel="stylesheet" href="/css/library.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+
+<body>
+    <!-- navbar -->
+    <nav class="navbar bg-light">
+        <div class="container-fluid">
+
+            <a class="navbar-brand" href="index.html">
+                <img src="/images/favicon.png" alt="Logo" width="70" height="70" class="d-inline-block align-text-top">
+
+            </a>
+            <a href="books.html">books</a>
+            <a href="costumers.html">customers</a>
+            <a href="loans.html">loans</a>
+            <a href="nolateloans.html">:(</a>
+        </div>
+    </nav>
+    <h1><span class="smallerFont">Gil's Library, a special one </span></h1>
+    <!-- Button trigger modal -->
+    <button type="button" class="button" data-toggle="modal" data-target="#exampleModalCenter">
+        add customer
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="exampleModalLongTitle">Great, a new customer!!</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        customer name: <input id="customer_name"><br>
+                        city:<input id="city"><br>
+                        age:<input id="cust_age"><br>
+
+                    </div><br>
+                    <div class="modal-footer"></div>
+                    <button onclick="cust_addData()" type="button" class="btn btn-primary">Add new customer</button>
+
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <br>
+            <div>
+                <input id="all_custs" onkeyup="displayAllCust()" type="text" class="form-control" aria-label="Default"
+                    placeholder="Search customer by name" aria-describedby="inputGroup-sizing-default">
+            </div>
+            <br>
+
+            <div id="display_custs"></div>
+
+
+
+            <script>
+
+                let customers = []
+
+                const MY_SERVER = "https://gil-library-backend.onrender.com" //flask
+
+
+
+                const displayAllCust = () => {
+                    display_custs.innerHTML =
+                        customers.data.filter(x => x.customer_name.includes(all_custs.value)).map(cust =>
+                            `<div><button onclick='delCustomer(${cust.id})'>delete customer</button> customer name: ${cust.customer_name},city: ${cust.city},age: ${cust.cust_age}</div>`).join("")
+                }
+
+                // display.innerHTML = res.data.map(cust => `
+                //     <div><h3>
+                //     <button onclick='updCustomer(${cust.id})'>update customer</button>
+                //     <button onclick='delCustomer(${cust.id})'>delete customer - ${cust.id}</button>
+                //     customer name: ${cust.customer_name} ,city: ${cust.city} ,age:${cust.age}</h3></div><hr>`).join("")
+
+                const build_display = () => {
+                    console.log("22222first")
+                    display_custs.innerHTML = customers.data.map(c =>
+                        `<div>
+             customer name:${c.customer_name},city: ${c.city},age:${c.cust_age} </div>`).join("")
+                }
+
+
+
+
+
+
+
+                /////////////////////customers////////////////////////
+
+                const cust_loadData = async () => {
+                    // get (READ)
+                    customers = await axios.get(MY_SERVER + "/cust/") //get data from server
+                    //build display
+                    console.table("customers",customers) //display data  in console
+                    displayAllCust()
+                    build_display()
+                }
+                cust_loadData()
+
+                // post (Create)
+                const cust_addData = async () => {
+                     if ((customer_name.value.length > 1 && parseInt(customer_name.value) != customer_name.value) &&
+                (city.value.length > 1 && parseInt(city.value) != city.value) &&
+                (cust_age.value.length > 1 && cust_age.value > 0)) {
+                axios.post(MY_SERVER+ "/cust/", {customer_name: customer_name.value, city: city.value, cust_age: cust_age.value}).then((res) => console.log(res.data))
+                cust_loadData()
+            }
+            else {
+                // Checks Name Input
+                if ((customer_name.value.length < 1 || parseInt(customer_name.value) == customer_name.value)) {
+                    customer_name_error()
+                }
+                // Checks City Input
+                if ((city.value.length < 1 || parseInt(customer_name.value) == customer_name.value)) {
+                    city_error()
+                }
+                // Checks Age Input
+                if ((!cust_age.value.length > 0 || !cust_age.value > 0)) {
+                    cust_age_error()
+                }
+
+            }cust_loadData()
+
+            //         await axios.post(MY_SERVER + "/cust/", {  }).then((res) => console.log(res.data))
+            //         cust_loadData()
+            //     }
+            //  const addData = () => {
+            //////////////////// Input Validation - first part checks if the field is empty, the second checks if it's the right type of input/ bigget than 0 in the age
+           
+        }
+
+
+                //delete (delete)
+                const delCustomer = async (id) => {
+                    console.log(id)
+                    await axios.delete(MY_SERVER + "/cust/" + id).then((customers) => console.log(customers.data))
+                    cust_loadData()
+                }
+
+        // const updCustomer = async (id) => {
+        //     // put (update)
+        //     const res = await axios.put(MY_SERVER + "/cust/" + id, { customer_name: custName.value, city: city.value, age: cust_age.value })
+        //     console.log(res)
+        //     cust_loadData()
+        // }
+
+        const customer_name_error = () => {
+            Toastify({
+                text: "Please enter a valid Name",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", // `top` or `bottom`
+                position: "left", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // Callback after click
+            }).showToast();
+        }
+
+        ///////// Wrong Customer Name ////////
+        const city_error = () => {
+            Toastify({
+                text: "Please enter a valid City",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", // `top` or `bottom`
+                position: "left", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // Callback after click
+            }).showToast();
+        }
+
+        ///////// Wrong Customer Name ////////
+        const cust_age_error = () => {
+            Toastify({
+                text: "Please enter a valid Age",
+                duration: 8000,
+                newWindow: true,
+                close: true,
+                gravity: "buttom", // `top` or `bottom`
+                position: "left", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #990033 0%, #ff0000 100%)",
+                },
+                onClick: function () { } // Callback after click
+            }).showToast();
+        }
+
+
+
+
+            </script>
+
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+body {margin:0;}
+    
+.navbar {
+  overflow: hidden;
+  background-color: rgb(101, 150, 241);
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.navbar a {
+  float: left;
+  display: block;
+  color: #000000;
+  text-align: center;
+  padding: 1px 16px;
+  text-decoration: solid;
+  font-size: 50px;
+}
+
+.navbar a:hover {
+  background: rgb(126, 203, 244);
+  color: black;
+}
+/* gil's top css */
+.main {
+  padding: 16px;
+  margin-top: 30px;
+  height: 1500px; /* Used in this example to enable scrolling */
+}
+
+
+    .smallerFont {
+    font-size: 43px;
+    margin-bottom: 10px;
+    background-color: rgb(140, 178, 250);
+    }
+
+.button {
+padding: 15px 25px;
+font-size: 24px;
+text-align: center;
+cursor: pointer;
+outline: none;
+color: #fff;
+background-color: #04AA6D;
+border: none;
+border-radius: 15px;
+box-shadow: 0 9px #999;
+}
+
+.button:hover {background-color: #3e8e41}
+
+.button:active {
+background-color: #3e8e41;
+box-shadow: 0 5px #666;
+transform: translateY(4px);
+}
+.p{
+  font-size:100px;
+  color:blue;
+  font-weight: bold;
+}
