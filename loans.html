@@ -12,6 +12,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- link to calculate current date -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- calculate delta days -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment-with-locales.min.js"></script>
 </head>
 
 <body>
@@ -26,7 +31,6 @@
             <a href="books.html">books</a>
             <a href="costumers.html">customers</a>
             <a href="loans.html">loans</a>
-            <a href="nolateloans.html">:(</a>
         </div>
     </nav>
     <h1><span class="smallerFont">Gil's Library, a special one </span></h1>
@@ -48,17 +52,37 @@
                 </div>
                 <div class="modal-body">
                     <div>
-                        customer name: <input id="customer_name"><br>
-                        book name:<input id="book_name"><br>
+                        <div class="input-group mb-3 input-group-lg">
+                            <span class="input-group-text" id="basic-addon1">👨🏼‍🎓</span>
+                            <select class="form-select" id="customer_id">
+                                <option value="" disabled selected hidden>Customer Name</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3 input-group-lg">
+                            <span class="input-group-text" id="basic-addon1">📖</span>
+                            <select class="form-select" id="book_id">
+                                <option value="" disabled selected hidden>Book Name</option>
+                            </select>
+                        </div>
+                        Loan date:<br><input type="date" id="loandate" name="date" required><br>
+                        returndate:<br><input type="date" min="1900-03" max="2022-12" id="returndate" required><br>
+                        book type(1) - returndate up tp 10 days
+                        <br>
+                        book type(2) - returndate up to 5 days
+                        <br>
+                        book type(3) - returndate up to 2 days
+                        <br>
+                        Loan's activate: <input type="checkbox" id="loan_activate" value="on" required>
+                    </div>
 
-                    </div><br>
-                    <div class="modal-footer"></div>
-                    <button onclick="loan_addData()" type="button" class="btn btn-primary">Add new loan</button>
+                </div><br>
+                <div class="modal-footer"></div>
+                <button onclick="loan_addData()" type="button" class="btn btn-primary">Add new loan</button>
 
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
+    </div>
     </div>
     <br>
     <div class="input-group mb-3">
@@ -67,156 +91,195 @@
             <div>
                 <input id="all_loans" onkeyup="displayAllLoans()" type="text" class="form-control" aria-label="Default"
                     placeholder="Search loan by name" aria-describedby="inputGroup-sizing-default">
+
             </div>
             <br>
 
             <div id="display_loans"></div>
 
 
+
             <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script>
             <script>
-                let today = new Date();
-                let dd = String(today.getDate()).padStart(2, '0');
-                let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-                let yyyy = today.getFullYear();
 
-                today = mm + '/' + dd + '/' + yyyy;
-                
 
                 let loans = []
 
-                const MY_SERVER = "https://gil-library-backend.onrender.com" 
+                let msg = ""
+
+                const MY_SERVER = "https://library-backend-m1jk.onrender.com"
                 // const MY_SERVER = "http://127.0.0.1:5000" //flask
 
 
 
 
-                const displayAllLoans = () => {
-                    console.log("first")
-                    display_loans.innerHTML =
-                        loans.data.filter(x => x.customer_name.includes(all_loans.value)).map(loan =>
-                            `<div> <button onclick='upd_return(${loan.id})'>book return</button> 
-                                loaner name: ${loan.customer_name},book loaned: ${loan.book_name},returndate:${loan.returndate}</div>`).join("")
+                let is_active = ""
+
+                // Read-load dataLoans from server 
+                const getAllLoans = async () => {
+                    let msg = ""
+                    msg += `<table style="text-align: center;">`;
+                    msg += `<tr>`;
+                    msg += `<th><center>Loan's ID</th>`;
+                    msg += `<th><center>Book name</th>`;
+                    msg += `<th><center>Book type</th>`;
+                    msg += `<th><center>Customer name</th>`;
+                    msg += `<th><center>Loan's Date</th>`;
+                    msg += `<th><center>Loan's Return Date</th>`;
+                    msg += `<th><center>Status</th>`;
+                    msg += `<th><center>Active/Deactive Loan</th>`;
+                    msg += `</tr>`;
+                    let res = ""
+                    await fetch(MY_SERVER + "/loans/", { method: "GET" }).then((response) => response.json()).then((data) => res = data);
+                    console.log(res)
+                    display_loans.innerHTML = res.filter(loan => loan.book_name.toLowerCase().includes(all_loans.value.toLowerCase())).map((loan) => {
+
+                        // calculate delta between loandate and returndate
+                        var start = moment(loan.loandate);
+                        var future = moment(loan.returndate);
+                        var d = future.diff(start, 'days');
+                        console.log(d);
+
+                        // Display loan status by loandate, returndate and book-type
+                        loan.is_active = "ON TIME"
+
+                        if (loan.b_type == 1 && d > 10 && loan.returndate < currentDate) loan.is_active = "LATE"
+                        else if (loan.b_type == 1 && d == 10 && loan.returndate == currentDate) loan.is_active = "DUE TODAY"
+                        else if (loan.b_type == 2 && d > 5 && loan.returndate < currentDate) loan.is_active = "LATE"
+                        else if (loan.b_type == 2 && d == 5 && loan.returndate == currentDate) loan.is_active = "DUE TODAY"
+                        else if (loan.b_type == 3 && d > 2 && loan.returndate < currentDate) loan.is_active = "LATE"
+                        else if (loan.b_type == 3 && d == 2 && loan.returndate == currentDate) loan.is_active = "DUE TODAY"
+
+                        console.log("loan book type" + loan.b_type)
+                        console.log("loan book id" + loan.book_id)
+                        console.log(loan.is_active)
+                        console.log("customer id" + loan.customer_id)
+                        console.log(currentDate)
+                        {
+
+                            msg += `<tr>`;
+                            msg += `<td><center>${loan.loan_id} <br> `;
+                            msg += `<td><center>${loan.book_name}</td>`;
+                            msg += `<td><center>${loan.b_type}</td>`;
+                            msg += `<td><center>${loan.customer_name}</td>`;
+                            msg += `<td><center>${loan.loandate}</td>`;
+                            msg += `<td><center>${loan.returndate}</td>`;
+
+                            // Check if loan status="LATE" and if so colored it in red
+                            if (loan.is_active == "LATE") {
+                                msg += `<td style="color:red"><center>${loan.is_active}</td>`
+                            }
+                            else {
+                                msg += `<td><center>${loan.is_active}</td>`
+                            }
+                            msg += `<td><center>Click on <br>
+               To return a book <br><button onclick="UpdLoan(${loan.loan_id})"
+               class="btn btn-danger">${loan.is_active}</button></td>`;
+                            msg += `</tr>`;
+                        }
+                    }
+                    ).join("")
+                    display_loans.innerHTML = msg
+
                 }
+                getAllLoans()
 
-                // display.innerHTML = res.data.map(cust => `
-                //     <div><h3>
-                //     <button onclick='upd_return(${loan.id})'>book return</button>
-                //     <button onclick='delCustomer(${cust.id})'>delete customer - ${cust.id}</button>
-                //     customer name: ${cust.customer_name} ,city: ${cust.city} ,age:${cust.age}</h3></div><hr>`).join("")
-
-                const build_display = () => {
-                    console.log("22222first")
-                    display_loans.innerHTML = loans.data.map(c =>
-                        `<div>
-            costumer who loaned:${c.customer_name},book name: ${c.book_name}</div>`).join("")
+                const getCusName = async () => {
+                    customers = await axios.get(MY_SERVER + "/cust/")
+                    customer_id.innerHTML += customers.data.filter(customer => customer.is_active == 'on').map(customer =>
+                        `<option value=${customer.id}>${customer.customer_name}</option>`)
+                        .join("")
                 }
+                getCusName()
 
+                const getBookName = async () => {
+                    loans = await axios.get(MY_SERVER + "/books/")
 
-
-
-
-
+                    book_id.innerHTML += loans.data.filter(loan =>
+                        ((loan.is_active == 'off') || (loan.is_active == 'on'))).map(book =>
+                            `<option value=${book.id}>${book.book_name}</option>`).join("")
+                }
+                getBookName()
 
                 /////////////////////loans////////////////////////
-
-                const loan_loadData = async () => {
-                    // get (READ)
-                    loans = await axios.get(MY_SERVER + "/loans/") //get data from server
-                    //build display
-                    console.log(loans.data) //display data  in console
-                    build_display()
-                }
-                loan_loadData()
-
-                // post (Create)
                 const loan_addData = async () => {
-                //     await axios.post(MY_SERVER + "/loans/", { customer_name: customer_name.value, book_name: book_name.value }).then((res) => console.log(res.data))
-                //     loan_loadData()
-                // }
-                customers = await axios.get(MY_SERVER+ "/cust/")
-            books = await axios.get(MY_SERVER+ "/books/")
-            // Checks if both customer name and book name exist - if they exist, add them. if not, display message.
-            if (customers.data.some(customer => customer.customer_name === customer_name.value) && books.data.some(book => book.book_name === book_name.value)) {
-                axios.post(MY_SERVER + "/loans/", { customer_name: customer_name.value, book_name: book_name.value })
-                loan_updated()
-            }
-            else {
-                if (!customers.data.some(customer => customer.name === customer_name.value)) {
-                    customer_name_error()
-                    console.log("The customer's name isn't found")
-                }
-                if (!books.data.some(book => book.name === book_name.value)) {
-                    book_name_error()
-                    console.log("The book's name isn't found")
-                }
-            }}
-            loan_loadData()
-        
+                    customers = await axios.get(MY_SERVER + "/cust/")
+                    books = await axios.get(MY_SERVER + "/books/")
 
-                //delete (delete)
-                const del_loan = async (id) => {
-                    console.log(id)
-                    await axios.delete(MY_SERVER + "/loans/" + id).then((loans) => console.log(loans.data))
-                    loan_loadData()
-                }
-
-                const upd_return = async (id) => {
-                    // put (update)
-                    console.log(today)
-                    const res = await axios.put(MY_SERVER + "/loans/" + id, { customer_name: customer_name.value, book_name: book_name.value, returndate: today})
-                    console.log(res)
-                    loan_loadData()
-                }
-                const customer_name_error = () => {
-                    Toastify({
-                text: "Please enter a valid customer name",
-                duration: 8000,
-                newWindow: true,
-                close: true,
-                gravity: "buttom", 
-                position: "left", 
-                stopOnFocus: true, 
-                style: {
-                    background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
-                },
-                onClick: function () { } // 
-            }).showToast();
-        }
-        const book_name_error = () => {
-            Toastify({
-                text: "Please enter a valid book name",
-                duration: 8000,
-                newWindow: true,
-                close: true,
-                gravity: "buttom", 
-                position: "left", 
-                stopOnFocus: true, 
-                style: {
-                    background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
-                },
-                onClick: function () { } // 
-            }).showToast();
-        }
-        const loan_updated = () => {
-            Toastify({
-                text: "Book loaned",
-                duration: 8000,
-                destination: "https://github.com/apvarun/toastify-js",
-                newWindow: true,
-                close: true,
-                gravity: "buttom", // `top` or `bottom`
-                position: "center", // `left`, `center` or `right`
-                stopOnFocus: true, // Prevents dismissing of toast on hover
-                style: {
-                    background: "linear-gradient(to right, #00b09b, #96c93d)",
-                },
-                onClick: function () { } // Callback after click
-            }).showToast();
-        
-        }
+                            axios.post(MY_SERVER + "/loans/", { customer_id: customer_id.value, book_id: book_id.value, loandate: loandate.value, returndate: returndate.value, is_active: "ON_TIME", loan_activate: loan_activate.value })
+                            loan_updated()
+                        }
+                       
 
 
+
+
+                const UpdLoan = async (id) => {
+                    if (is_active.value == 'on') {
+                        is_active.value = 'off';
+
+
+                    }
+                    await axios.put(MY_SERVER + "/loans/" + id, { is_active: is_active.value }).then((res) => console.log(res.data))}
+
+
+
+                    const customer_name_error = () => {
+                        Toastify({
+                            text: "Please enter a valid customer name",
+                            duration: 6000,
+                            newWindow: true,
+                            close: true,
+                            gravity: "buttom",
+                            position: "left",
+                            stopOnFocus: true,
+                            style: {
+                                background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
+                            },
+                            onClick: function () { } // 
+                        }).showToast();
+                    }
+                    const book_name_error = () => {
+                        Toastify({
+                            text: "Please enter a valid book name",
+                            duration: 6000,
+                            newWindow: true,
+                            close: true,
+                            gravity: "buttom",
+                            position: "left",
+                            stopOnFocus: true,
+                            style: {
+                                background: "linear-gradient(to right,#990033 0%, #ff0000 100%)",
+                            },
+                            onClick: function () { } // 
+                        }).showToast();
+                    }
+                    const loan_updated = () => {
+                        Toastify({
+                            text: "Book loaned",
+                            duration: 6000,
+                            newWindow: true,
+                            close: true,
+                            gravity: "buttom", // `top` or `bottom`
+                            position: "center", // `left`, `center` or `right`
+                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                            style: {
+                                background: "linear-gradient(to right, #00b09b, #96c93d)",
+                            },
+                            onClick: function () { } // Callback after click
+                        }).showToast();
+
+                    }
+
+                    const date = new Date();
+
+                    let day = date.getDate();
+                    let month = date.getMonth() + 1;
+                    let year = date.getFullYear();
+
+                    // This arrangement can be altered based on how we want the date's format to appear.
+                    let currentDate = `${year}-${month}-${day}`;
+                    console.log(currentDate);
 
 
 
